@@ -1,6 +1,7 @@
 package control;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -52,14 +53,13 @@ public class Register extends HttpServlet {
 		String redirectedPage = "/loginPage.jsp";
 		try {
 			Connection con = DriverManagerConnectionPool.getConnection();
-			String sql = "INSERT INTO UserAccount(email, passwordUser, nome, cognome, indirizzo, telefono, numero, intestatario, CVV) VALUES (?, MD5(?), ?, ?, ?, ?, ?, ?, ?)";
 			String sql2 = "INSERT INTO Cliente(email) VALUES (?)";
 			String sql3 = "INSERT INTO Venditore(email) VALUES (?)";
 			
 			//Aggiungi a AccountUser
-			PreparedStatement ps = con.prepareStatement(sql);
+			PreparedStatement ps = con.prepareStatement("INSERT INTO UserAccount(email, passwordUser, nome, cognome, indirizzo, telefono, numero, intestatario, CVV) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			ps.setString(1, email);
-			ps.setString(2, password);
+			ps.setString(2, hashPassword(password)); // Chiamata al metodo per ottenere l'hash sicuro
 			ps.setString(3, nome);
 			ps.setString(4, cognome);
 			ps.setString(5, indirizzo);
@@ -67,7 +67,7 @@ public class Register extends HttpServlet {
 			ps.setString(7, carta);
 			ps.setString(8, intestatario);
 			ps.setString(9, cvv);
-			
+
 			ps.executeUpdate();
 			con.commit();
 			
@@ -91,5 +91,21 @@ public class Register extends HttpServlet {
 			redirectedPage = "/register-form.jsp";
 		}
 		response.sendRedirect(request.getContextPath() + redirectedPage);
+	}
+	
+	private String hashPassword(String password) {
+	    String generatedPassword = null;
+	    try {
+	        MessageDigest md = MessageDigest.getInstance("SHA-256");
+	        byte[] bytes = md.digest(password.getBytes());
+	        StringBuilder sb = new StringBuilder();
+	        for (int i = 0; i < bytes.length; i++) {
+	            sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+	        }
+	        generatedPassword = sb.toString();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return generatedPassword;
 	}
 }

@@ -99,18 +99,20 @@ public class Login extends HttpServlet {
 	}
 		
 	private String checkPsw(String psw) {
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance("MD5");
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		byte[] messageDigest = md.digest(psw.getBytes());
-		BigInteger number = new BigInteger(1, messageDigest);
-		String hashtext = number.toString(16);
-		
-		return hashtext;
+	    String generatedPassword = null;
+	    try {
+	        MessageDigest md = MessageDigest.getInstance("SHA-256");
+	        byte[] bytes = md.digest(psw.getBytes());
+	        StringBuilder sb = new StringBuilder();
+	        for (int i = 0; i < bytes.length; i++) {
+	            sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+	        }
+	        generatedPassword = sb.toString();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return generatedPassword;
 	}
+
 
 }
